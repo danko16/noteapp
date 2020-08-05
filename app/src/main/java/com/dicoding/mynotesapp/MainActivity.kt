@@ -1,13 +1,17 @@
 package com.dicoding.mynotesapp
 
 import android.content.Intent
+import android.database.ContentObserver
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.PersistableBundle
 import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.dicoding.mynotesapp.adapter.NoteAdapter
+import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.CONTENT_URI
 import com.dicoding.mynotesapp.db.NoteHelper
 import com.dicoding.mynotesapp.entity.Note
 import com.dicoding.mynotesapp.helper.MappingHelper
@@ -42,16 +46,28 @@ class MainActivity : AppCompatActivity() {
             startActivityForResult(intent, NoteAddUpdateActivity.REQUEST_ADD)
         }
 
+        val handlerThread = HandlerThread("DataObserver")
+        handlerThread.start()
+        val handler = Handler(handlerThread.looper)
+
+        val myObserver = object : ContentObserver(handler) {
+            override fun onChange(selfChange: Boolean) {
+                loadNoteAsync()
+            }
+        }
+
+        contentResolver.registerContentObserver(CONTENT_URI, true, myObserver)
+
         noteHelper = NoteHelper.getInstance(applicationContext)
         noteHelper.open()
 
         if (savedInstanceState == null) {
-            Log.d("THIS_TEST","saved instance not exist")
+            Log.d("THIS_TEST", "saved instance not exist")
             loadNoteAsync()
         } else {
             val list = savedInstanceState.getParcelableArrayList<Note>(EXTRA_STATE)
-            Log.d("THIS_TEST","saved instance exist")
-            if(list != null) {
+            Log.d("THIS_TEST", "saved instance exist")
+            if (list != null) {
                 adapter.listNotes = list
             }
         }
@@ -66,10 +82,11 @@ class MainActivity : AppCompatActivity() {
         GlobalScope.launch(Dispatchers.Main) {
             progressbar.visibility = View.VISIBLE
             val deferredNotes = async(Dispatchers.IO) {
-                val cursor = noteHelper.queryAll()
+                val cursor = contentResolver?.query(CONTENT_URI, null, null, null, null)
                 MappingHelper.mapCursorToArrayList(cursor)
             }
             val notes = deferredNotes.await()
+            Log.d("TEST_NOTES", notes.size.toString())
             progressbar.visibility = View.INVISIBLE
             if (notes.size > 0) {
                 adapter.listNotes = notes
@@ -103,6 +120,7 @@ class MainActivity : AppCompatActivity() {
                             val note =
                                 data.getParcelableExtra<Note>(NoteAddUpdateActivity.EXTRA_NOTE)
                             val position = data.getIntExtra(NoteAddUpdateActivity.EXTRA_POSITION, 0)
+
 
                             adapter.updateItem(position, note!!)
                             rv_notes.smoothScrollToPosition(position)

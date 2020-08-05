@@ -9,15 +9,33 @@ object MappingHelper {
         val noteList = ArrayList<Note>()
 
         notesCursor?.apply {
-            while(moveToNext()) {
+            while (moveToNext()) {
                 val id = getInt(getColumnIndexOrThrow(DatabaseContract.NoteColumns._ID))
                 val title = getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.TITLE))
-                val description = getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.DESCRIPTION))
+                val description =
+                    getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.DESCRIPTION))
                 val date = getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.DATE))
                 noteList.add(Note(id, title, description, date))
             }
         }
 
         return noteList
+    }
+
+    fun mapCursorToObject(notesCursor: Cursor?): Note {
+        val note = Note()
+        notesCursor?.apply {
+            moveToFirst()
+            val id = getInt(getColumnIndexOrThrow(DatabaseContract.NoteColumns._ID))
+            val title = getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.TITLE))
+            val description = getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.DESCRIPTION))
+            val date = getString(getColumnIndexOrThrow(DatabaseContract.NoteColumns.DATE))
+            note.id = id
+            note.title = title
+            note.description = description
+            note.date = date
+        }
+
+        return note
     }
 }

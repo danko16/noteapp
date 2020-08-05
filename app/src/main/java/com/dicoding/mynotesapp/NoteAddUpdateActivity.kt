@@ -2,6 +2,7 @@ package com.dicoding.mynotesapp
 
 import android.content.ContentValues
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.util.Log
@@ -12,9 +13,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import com.dicoding.mynotesapp.db.DatabaseContract
+import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.CONTENT_URI
 import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.DATE
 import com.dicoding.mynotesapp.db.NoteHelper
 import com.dicoding.mynotesapp.entity.Note
+import com.dicoding.mynotesapp.helper.MappingHelper
 import kotlinx.android.synthetic.main.activity_note_add_update.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,6 +27,7 @@ class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
     private var note: Note? = null
     private var position: Int = 0
     private lateinit var noteHelper: NoteHelper
+    private lateinit var uriWithId: Uri
 
     companion object {
         const val EXTRA_POSITION = "extra_position"
@@ -56,6 +60,15 @@ class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
         val btnTitle: String
 
         if (isEdit) {
+
+            uriWithId = Uri.parse(CONTENT_URI.toString() + "/" + note?.id)
+
+            val cursor = contentResolver.query(uriWithId, null, null, null, null)
+            if (cursor != null) {
+                note = MappingHelper.mapCursorToObject(cursor)
+                cursor.close()
+            }
+
             actionBarTitle = "Ubah"
             btnTitle = "Update"
 
@@ -97,35 +110,14 @@ class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
             values.put(DatabaseContract.NoteColumns.DESCRIPTION, description)
 
             if (isEdit) {
-                val result = noteHelper.update(note?.id.toString(), values).toLong()
-                if (result > 0) {
-                    Log.d("THIS_TEST", "$result")
-                    setResult(RESULT_UPDATE, intent)
-                    finish()
-                } else {
-                    Toast.makeText(
-                        this@NoteAddUpdateActivity,
-                        "Gagal mengupdate data",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
+                contentResolver.update(uriWithId, values, null, null)
+                Toast.makeText(this, "Satu item berhasil di edit", Toast.LENGTH_SHORT).show()
+                finish()
             } else {
-                note?.date = getCurrentDate()
                 values.put(DATE, getCurrentDate())
-                val result = noteHelper.insert(values)
-                if (result > 0) {
-                    Log.d("THIS_TEST", "$result")
-                    note?.id = result.toInt()
-                    setResult(RESULT_ADD, intent)
-                    finish()
-                } else {
-                    Toast.makeText(
-                        this@NoteAddUpdateActivity,
-                        "Gagal menambah data",
-                        Toast.LENGTH_LONG
-                    ).show()
-
-                }
+                contentResolver.insert(CONTENT_URI, values)
+                Toast.makeText(this, "Satu item berhasil disimpan", Toast.LENGTH_SHORT).show()
+                finish()
             }
         }
     }
@@ -179,20 +171,9 @@ class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
                 if (isDialogClose) {
                     finish()
                 } else {
-                    val result = noteHelper.deleteById(note?.id.toString()).toLong()
-                    if (result > 0) {
-                        Log.d("THIS_TEST", "$result")
-                        val intent = Intent()
-                        intent.putExtra(EXTRA_POSITION, position)
-                        setResult(RESULT_DELETE, intent)
-                        finish()
-                    } else {
-                        Toast.makeText(
-                            this@NoteAddUpdateActivity,
-                            "Gagal Menghapus Data",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    contentResolver.delete(uriWithId, null, null)
+                    Toast.makeText(this, "Satu item berhasil dihapus", Toast.LENGTH_SHORT).show()
+                    finish()
                 }
             }
             .setNegativeButton("Tidak") { dialog, id -> dialog.cancel() }

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cv_item_note"
+    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="4dp"
+    app:cardMaxElevation="4dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <TextView
+            android:gravity="start"
+            android:id="@+id/tv_item_date"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp"
+            android:layout_width="match_parent"
+            android:text="@string/date"
+            android:textSize="12sp" />
+
+        <TextView
+            android:gravity="start"
+            android:id="@+id/tv_item_title"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="4dp"
+            android:layout_width="match_parent"
+            android:text="@string/title"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:gravity="start"
+            android:id="@+id/tv_item_description"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:text="@string/description"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

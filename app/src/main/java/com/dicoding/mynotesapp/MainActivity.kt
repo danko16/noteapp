@@ -24,7 +24,6 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var adapter: NoteAdapter
-    private lateinit var noteHelper: NoteHelper
 
     companion object {
         private const val EXTRA_STATE = "EXTRA_STATE"
@@ -43,7 +42,7 @@ class MainActivity : AppCompatActivity() {
 
         fab_add.setOnClickListener {
             val intent = Intent(this@MainActivity, NoteAddUpdateActivity::class.java)
-            startActivityForResult(intent, NoteAddUpdateActivity.REQUEST_ADD)
+            startActivity(intent)
         }
 
         val handlerThread = HandlerThread("DataObserver")
@@ -57,9 +56,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         contentResolver.registerContentObserver(CONTENT_URI, true, myObserver)
-
-        noteHelper = NoteHelper.getInstance(applicationContext)
-        noteHelper.open()
 
         if (savedInstanceState == null) {
             Log.d("THIS_TEST", "saved instance not exist")
@@ -92,54 +88,8 @@ class MainActivity : AppCompatActivity() {
                 adapter.listNotes = notes
             } else {
                 adapter.listNotes = ArrayList()
-                showSnackbarMessage("Tidak ada data saat ini")
+                Snackbar.make(rv_notes, "Tidak ada data saat ini", Snackbar.LENGTH_SHORT).show()
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        noteHelper.close()
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (data != null) {
-            when (requestCode) {
-                NoteAddUpdateActivity.REQUEST_ADD -> if (resultCode == NoteAddUpdateActivity.RESULT_ADD) {
-                    val note = data.getParcelableExtra<Note>(NoteAddUpdateActivity.EXTRA_NOTE)
-
-                    adapter.addItem(note!!)
-                    rv_notes.smoothScrollToPosition(adapter.itemCount - 1)
-                    showSnackbarMessage("Satu item berhasil ditambahkan")
-                }
-                NoteAddUpdateActivity.REQUEST_UPDATE ->
-                    when (resultCode) {
-                        NoteAddUpdateActivity.RESULT_UPDATE -> {
-                            val note =
-                                data.getParcelableExtra<Note>(NoteAddUpdateActivity.EXTRA_NOTE)
-                            val position = data.getIntExtra(NoteAddUpdateActivity.EXTRA_POSITION, 0)
-
-
-                            adapter.updateItem(position, note!!)
-                            rv_notes.smoothScrollToPosition(position)
-
-                            showSnackbarMessage("Satu item berhasil diubah")
-                        }
-                        NoteAddUpdateActivity.RESULT_DELETE -> {
-                            val position = data.getIntExtra(NoteAddUpdateActivity.EXTRA_POSITION, 0)
-
-                            adapter.removeItem(position)
-
-                            showSnackbarMessage("Satu item berhasil dihapus")
-                        }
-                    }
-            }
-        }
-    }
-
-    private fun showSnackbarMessage(message: String) {
-        Snackbar.make(rv_notes, message, Snackbar.LENGTH_SHORT).show()
     }
 }

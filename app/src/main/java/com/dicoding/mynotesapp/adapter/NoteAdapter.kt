@@ -23,22 +23,6 @@ class NoteAdapter(private val activity: Activity) :
             notifyDataSetChanged()
         }
 
-    fun addItem(note: Note) {
-        this.listNotes.add(note)
-        notifyItemInserted(this.listNotes.size - 1)
-    }
-
-    fun updateItem(position: Int, note: Note) {
-        this.listNotes[position] = note
-        notifyItemChanged(position, note)
-    }
-
-    fun removeItem(position: Int) {
-        this.listNotes.removeAt(position)
-        notifyItemRemoved(position)
-        notifyItemRangeChanged(position, this.listNotes.size)
-    }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_note, parent, false)
         return NoteViewHolder(view)
@@ -66,10 +50,7 @@ class NoteAdapter(private val activity: Activity) :
                                 val intent = Intent(activity, NoteAddUpdateActivity::class.java)
                                 intent.putExtra(NoteAddUpdateActivity.EXTRA_POSITION, position)
                                 intent.putExtra(NoteAddUpdateActivity.EXTRA_NOTE, note)
-                                activity.startActivityForResult(
-                                    intent,
-                                    NoteAddUpdateActivity.REQUEST_UPDATE
-                                )
+                                activity.startActivity(intent)
                             }
 
                         })

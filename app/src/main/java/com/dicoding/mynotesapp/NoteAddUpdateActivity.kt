@@ -1,11 +1,8 @@
 package com.dicoding.mynotesapp
 
 import android.content.ContentValues
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.PersistableBundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -15,7 +12,6 @@ import androidx.appcompat.app.AlertDialog
 import com.dicoding.mynotesapp.db.DatabaseContract
 import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.CONTENT_URI
 import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.DATE
-import com.dicoding.mynotesapp.db.NoteHelper
 import com.dicoding.mynotesapp.entity.Note
 import com.dicoding.mynotesapp.helper.MappingHelper
 import kotlinx.android.synthetic.main.activity_note_add_update.*
@@ -25,12 +21,9 @@ import java.util.*
 class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
     private var isEdit = false
     private var note: Note? = null
-    private var position: Int = 0
-    private lateinit var noteHelper: NoteHelper
     private lateinit var uriWithId: Uri
 
     companion object {
-        const val EXTRA_POSITION = "extra_position"
         const val EXTRA_NOTE = "extra_note"
         const val ALERT_DIALOG_CLOSE = 10
         const val ALERT_DIALOG_DELETE = 20
@@ -40,12 +33,8 @@ class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_note_add_update)
 
-        noteHelper = NoteHelper.getInstance(applicationContext)
-        noteHelper.open()
-
         note = intent.getParcelableExtra(EXTRA_NOTE)
         if (note != null) {
-            position = intent.getIntExtra(EXTRA_POSITION, 0)
             isEdit = true
         } else {
             note = Note()
@@ -101,12 +90,12 @@ class NoteAddUpdateActivity : AppCompatActivity(), View.OnClickListener {
             values.put(DatabaseContract.NoteColumns.DESCRIPTION, description)
 
             if (isEdit) {
-                contentResolver.update(uriWithId, values, null, null)
+                contentResolver?.update(uriWithId, values, null, null)
                 Toast.makeText(this, "Satu item berhasil di edit", Toast.LENGTH_SHORT).show()
                 finish()
             } else {
                 values.put(DATE, getCurrentDate())
-                contentResolver.insert(CONTENT_URI, values)
+                contentResolver?.insert(CONTENT_URI, values)
                 Toast.makeText(this, "Satu item berhasil disimpan", Toast.LENGTH_SHORT).show()
                 finish()
             }

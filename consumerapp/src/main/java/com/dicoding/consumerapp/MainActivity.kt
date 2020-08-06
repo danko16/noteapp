@@ -1,4 +1,4 @@
-package com.dicoding.mynotesapp
+package com.dicoding.consumerapp
 
 import android.content.Intent
 import android.database.ContentObserver
@@ -6,13 +6,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
-import android.util.Log
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.dicoding.mynotesapp.adapter.NoteAdapter
-import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.CONTENT_URI
-import com.dicoding.mynotesapp.entity.Note
-import com.dicoding.mynotesapp.helper.MappingHelper
+import com.dicoding.consumerapp.adapter.NotesAdapter
+import com.dicoding.consumerapp.db.DatabaseContract.NotesColumn.Companion.CONTENT_URI
+import com.dicoding.consumerapp.entity.NoteModel
+import com.dicoding.consumerapp.helper.MappingHelper
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.Dispatchers
@@ -21,25 +20,24 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var adapter: NoteAdapter
+    private lateinit var adapter: NotesAdapter
 
     companion object {
-        private const val EXTRA_STATE = "EXTRA_STATE"
+        private const val EXTRA_STATE = "extra_state"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        supportActionBar?.title = "Notes"
+        adapter = NotesAdapter(this)
 
         rv_notes.layoutManager = LinearLayoutManager(this)
         rv_notes.setHasFixedSize(true)
-        adapter = NoteAdapter(this)
         rv_notes.adapter = adapter
 
         fab_add.setOnClickListener {
-            val intent = Intent(this@MainActivity, NoteAddUpdateActivity::class.java)
+            val intent = Intent(this, NoteAddUpdateActivity::class.java)
             startActivity(intent)
         }
 
@@ -47,20 +45,18 @@ class MainActivity : AppCompatActivity() {
         handlerThread.start()
         val handler = Handler(handlerThread.looper)
 
-        val myObserver = object : ContentObserver(handler) {
+        val observer = object : ContentObserver(handler) {
             override fun onChange(selfChange: Boolean) {
-                loadNoteAsync()
+                loadAsync()
             }
         }
 
-        contentResolver.registerContentObserver(CONTENT_URI, true, myObserver)
+        contentResolver.registerContentObserver(CONTENT_URI, true, observer)
 
         if (savedInstanceState == null) {
-            Log.d("THIS_TEST", "saved instance not exist")
-            loadNoteAsync()
+            loadAsync()
         } else {
-            val list = savedInstanceState.getParcelableArrayList<Note>(EXTRA_STATE)
-            Log.d("THIS_TEST", "saved instance exist")
+            val list = savedInstanceState.getParcelableArrayList<NoteModel>(EXTRA_STATE)
             if (list != null) {
                 adapter.listNotes = list
             }
@@ -72,22 +68,22 @@ class MainActivity : AppCompatActivity() {
         outState.putParcelableArrayList(EXTRA_STATE, adapter.listNotes)
     }
 
-    private fun loadNoteAsync() {
+    private fun loadAsync() {
         GlobalScope.launch(Dispatchers.Main) {
             progressbar.visibility = View.VISIBLE
             val deferredNotes = async(Dispatchers.IO) {
-                val cursor = contentResolver?.query(CONTENT_URI, null, null, null, null)
+                val cursor = contentResolver.query(CONTENT_URI, null, null, null, null)
                 MappingHelper.mapCursorToArrayList(cursor)
             }
             val notes = deferredNotes.await()
-            Log.d("TEST_NOTES", notes.size.toString())
-            progressbar.visibility = View.INVISIBLE
+            progressbar.visibility = View.GONE
             if (notes.size > 0) {
                 adapter.listNotes = notes
             } else {
-                adapter.listNotes = ArrayList()
+                adapter.listNotes = ArrayList<NoteModel>()
                 Snackbar.make(rv_notes, "Tidak ada data saat ini", Snackbar.LENGTH_SHORT).show()
             }
         }
     }
+
 }

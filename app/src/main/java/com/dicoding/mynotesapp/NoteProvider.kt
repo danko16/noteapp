@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.UriMatcher
 import android.database.Cursor
 import android.net.Uri
-import androidx.core.content.contentValuesOf
 import com.dicoding.mynotesapp.db.DatabaseContract.Companion.AUTHORITY
 import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.CONTENT_URI
 import com.dicoding.mynotesapp.db.DatabaseContract.NoteColumns.Companion.TABLE_NAME

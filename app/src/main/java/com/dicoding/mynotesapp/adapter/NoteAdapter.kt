@@ -48,7 +48,6 @@ class NoteAdapter(private val activity: Activity) :
                         object : CustomOnItemClickListener.OnItemCLickCallBack {
                             override fun onItemClicked(view: View?, position: Int) {
                                 val intent = Intent(activity, NoteAddUpdateActivity::class.java)
-                                intent.putExtra(NoteAddUpdateActivity.EXTRA_POSITION, position)
                                 intent.putExtra(NoteAddUpdateActivity.EXTRA_NOTE, note)
                                 activity.startActivity(intent)
                             }
